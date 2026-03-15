@@ -54,3 +54,11 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+
+# --- Project Specific ---
+temp/
+docs/
+*.bak
+*.tmp
+*.log
+
