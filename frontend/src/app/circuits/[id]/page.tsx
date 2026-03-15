@@ -1,25 +1,35 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import type { GateOperation, SimulationResult } from "./types/circuit";
-import { simulateCircuit } from "./lib/api";
-import { isMultiQubitGate } from "./components/GateToolbar";
-import GateToolbar from "./components/GateToolbar";
-import CircuitBuilder from "./components/CircuitBuilder";
-import SimulationControls from "./components/SimulationControls";
-import ResultDashboard from "./components/ResultDashboard";
-import ExampleCircuits from "./components/ExampleCircuits";
+import { useParams } from "next/navigation";
+import type { GateOperation, SimulationResult } from "../../types/circuit";
+import { simulateCircuit } from "../../lib/api";
+import { getCircuitById } from "../../lib/circuitData";
+import { isMultiQubitGate } from "../../components/GateToolbar";
+import GateToolbar from "../../components/GateToolbar";
+import CircuitBuilder from "../../components/CircuitBuilder";
+import SimulationControls from "../../components/SimulationControls";
+import ResultDashboard from "../../components/ResultDashboard";
 
 let nextId = 0;
 function genId() {
   return `op-${nextId++}`;
 }
 
-export default function Home() {
-  const [numQubits, setNumQubits] = useState(2);
-  const [initialStates, setInitialStates] = useState<number[]>([0, 0]);
-  const [operations, setOperations] = useState<GateOperation[]>([]);
+export default function CircuitDetailPage() {
+  const params = useParams();
+  const circuitId = params.id as string;
+  const circuitData = useMemo(() => getCircuitById(circuitId), [circuitId]);
+
+  // Initialize state from circuit data
+  const [numQubits, setNumQubits] = useState(circuitData?.qubits ?? 2);
+  const [initialStates, setInitialStates] = useState<number[]>(
+    circuitData?.initialStates ?? [0, 0]
+  );
+  const [operations, setOperations] = useState<GateOperation[]>(
+    () => circuitData?.operations.map((op) => ({ ...op, id: genId() })) ?? []
+  );
   const [selectedGate, setSelectedGate] = useState<string | null>(null);
   const [pendingControl, setPendingControl] = useState<{
     gate: string;
@@ -51,11 +61,9 @@ export default function Home() {
 
       if (isMultiQubitGate(selectedGate)) {
         if (!pendingControl) {
-          // First click: set control qubit
           setPendingControl({ gate: selectedGate, control: qubit, step });
         } else {
-          // Second click: set target qubit
-          if (qubit === pendingControl.control) return; // same qubit
+          if (qubit === pendingControl.control) return;
           const op: GateOperation = {
             id: genId(),
             gate: pendingControl.gate,
@@ -67,7 +75,6 @@ export default function Home() {
           setPendingControl(null);
         }
       } else {
-        // Single-qubit gate
         const op: GateOperation = {
           id: genId(),
           gate: selectedGate,
@@ -101,7 +108,6 @@ export default function Home() {
   const handleRemoveQubit = useCallback(() => {
     setNumQubits((n) => {
       const newN = Math.max(n - 1, 1);
-      // Remove operations that reference the deleted qubit
       setOperations((ops) =>
         ops.filter(
           (op) =>
@@ -123,7 +129,7 @@ export default function Home() {
     setInitialStates((prev) => Array(prev.length).fill(0));
   }, []);
 
-  // ─── Initial State Toggle ─────────────────────────────────
+  // ─── Toggle initial state ────────────────────────────────
   const handleToggleInitialState = useCallback((qubit: number) => {
     setInitialStates((prev) => {
       const next = [...prev];
@@ -137,7 +143,6 @@ export default function Home() {
     setIsRunning(true);
     setError(null);
     try {
-      // Sort operations by step order before sending
       const sorted = [...operations].sort((a, b) => a.step - b.step);
       const res = await simulateCircuit(numQubits, initialStates, sorted);
       setResult(res);
@@ -146,21 +151,35 @@ export default function Home() {
     } finally {
       setIsRunning(false);
     }
-  }, [numQubits, operations]);
+  }, [numQubits, initialStates, operations]);
 
-  // ─── Load example circuit ─────────────────────────────────
-  const handleLoadExample = useCallback(
-    (exNumQubits: number, exOps: Omit<GateOperation, "id">[]) => {
-      setNumQubits(exNumQubits);
-      setInitialStates(Array(exNumQubits).fill(0));
-      setOperations(exOps.map((op) => ({ ...op, id: genId() })));
-      setResult(null);
-      setError(null);
-      setPendingControl(null);
-      setSelectedGate(null);
-    },
-    []
-  );
+  // ─── 404 ──────────────────────────────────────────────────
+  if (!circuitData) {
+    return (
+      <main className="app-container">
+        <header className="app-header">
+          <div className="header-content">
+            <div className="header-icon">⚠️</div>
+            <div>
+              <h1 className="app-title">Circuit Not Found</h1>
+              <p className="app-subtitle">The circuit &quot;{circuitId}&quot; does not exist.</p>
+            </div>
+          </div>
+        </header>
+        <Link
+          href="/circuits"
+          style={{
+            color: "var(--accent-cyan)",
+            textDecoration: "none",
+            marginTop: "1rem",
+            display: "inline-block",
+          }}
+        >
+          ← Back to Circuit Library
+        </Link>
+      </main>
+    );
+  }
 
   return (
     <main className="app-container">
@@ -169,10 +188,8 @@ export default function Home() {
         <div className="header-content">
           <div className="header-icon">⚛</div>
           <div>
-            <h1 className="app-title">Quantum Gate Simulator</h1>
-            <p className="app-subtitle">
-              Build circuits, simulate quantum states, visualize results
-            </p>
+            <h1 className="app-title">{circuitData.name}</h1>
+            <p className="app-subtitle">{circuitData.description}</p>
           </div>
         </div>
         <Link
@@ -187,9 +204,25 @@ export default function Home() {
             transition: "all 0.2s",
           }}
         >
-          Circuit Library →
+          ← Circuit Library
         </Link>
       </header>
+
+      {/* Description Card */}
+      <div
+        style={{
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(0, 240, 255, 0.1)",
+          borderRadius: "12px",
+          padding: "1.25rem 1.5rem",
+          marginBottom: "1.5rem",
+          lineHeight: 1.7,
+          color: "rgba(255,255,255,0.65)",
+          fontSize: "0.92rem",
+        }}
+      >
+        {circuitData.longDescription}
+      </div>
 
       {/* Gate Toolbar */}
       <GateToolbar onSelectGate={handleSelectGate} selectedGate={selectedGate} />
@@ -224,9 +257,6 @@ export default function Home() {
           <ResultDashboard result={result} />
         </div>
       </div>
-
-      {/* Example Circuits */}
-      <ExampleCircuits onLoadExample={handleLoadExample} />
     </main>
   );
 }
