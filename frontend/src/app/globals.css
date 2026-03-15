@@ -1,0 +1,677 @@
+@import "tailwindcss";
+
+/* ─── Quantum Theme Variables ──────────────────────────────── */
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a28;
+  --bg-cell: #14141f;
+  --bg-hover: #1e1e2e;
+  --border: #2a2a3d;
+  --border-light: #3a3a55;
+  --text-primary: #e8e8f0;
+  --text-secondary: #9494b0;
+  --text-dim: #5e5e7a;
+  --accent-indigo: #6366f1;
+  --accent-cyan: #22d3ee;
+  --accent-green: #10b981;
+  --accent-red: #ef4444;
+  --accent-purple: #a855f7;
+  --glow-indigo: rgba(99, 102, 241, 0.25);
+  --glow-cyan: rgba(34, 211, 238, 0.15);
+}
+
+/* ─── Base ──────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── App Container ─────────────────────────────────────────── */
+.app-container {
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+
+/* ─── Header ────────────────────────────────────────────────── */
+.app-header {
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  font-size: 36px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+  border-radius: 14px;
+  box-shadow: 0 0 24px var(--glow-indigo);
+}
+
+.app-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff, var(--accent-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.app-subtitle {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* ─── Gate Toolbar ──────────────────────────────────────────── */
+.gate-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.gate-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.gate-group-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  margin: 0;
+}
+
+.gate-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.gate-btn {
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--gate-color);
+  background: var(--gate-color-dim);
+  color: var(--gate-color);
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+.gate-btn:hover {
+  background: var(--gate-color);
+  color: #fff;
+  box-shadow: 0 0 16px var(--gate-color);
+  transform: translateY(-2px);
+}
+
+.gate-btn-active {
+  background: var(--gate-color) !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px var(--gate-color) !important;
+  transform: scale(1.08);
+}
+
+.gate-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border-light);
+  flex-shrink: 0;
+}
+
+/* ─── Main Content Layout ───────────────────────────────────── */
+.main-content {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .main-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+.circuit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.results-area {
+  position: sticky;
+  top: 20px;
+}
+
+/* ─── Circuit Builder ───────────────────────────────────────── */
+.circuit-builder {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.circuit-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.qubit-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.circuit-ctrl-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-light);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.circuit-ctrl-btn:hover:not(:disabled) {
+  background: var(--accent-indigo);
+  border-color: var(--accent-indigo);
+}
+
+.circuit-ctrl-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.qubit-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 70px;
+  text-align: center;
+}
+
+.circuit-reset-btn {
+  padding: 6px 16px;
+  border: 1px solid var(--accent-red);
+  background: transparent;
+  color: var(--accent-red);
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.circuit-reset-btn:hover {
+  background: var(--accent-red);
+  color: #fff;
+}
+
+.circuit-hint {
+  padding: 8px 14px;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--accent-indigo);
+  margin-bottom: 12px;
+}
+
+/* ─── Circuit Grid ──────────────────────────────────────────── */
+.circuit-grid-wrapper {
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.circuit-grid {
+  display: flex;
+  flex-direction: column;
+  min-width: fit-content;
+}
+
+.circuit-row {
+  display: flex;
+  align-items: center;
+  height: 56px;
+}
+
+.circuit-header-row {
+  height: 28px;
+}
+
+.circuit-label {
+  width: 64px;
+  min-width: 64px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 8px;
+}
+
+.qubit-label {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+
+.ket-label {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.circuit-header-cell {
+  width: 56px;
+  min-width: 56px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.circuit-cell {
+  width: 56px;
+  min-width: 56px;
+  height: 56px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.circuit-cell-clickable {
+  cursor: crosshair;
+}
+
+.circuit-cell-clickable:hover {
+  border-color: var(--accent-indigo);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.circuit-cell-pending {
+  border-color: var(--accent-green) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Wire line across each cell */
+.wire-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  background: var(--border-light);
+  z-index: 0;
+}
+
+/* Gate chip */
+.gate-chip {
+  position: relative;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gate-chip:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+}
+
+/* Control dot for multi-qubit gates */
+.control-dot {
+  position: relative;
+  z-index: 2;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.control-dot:hover {
+  transform: scale(1.4);
+}
+
+/* Vertical connector line between control and target */
+.connector-line {
+  position: absolute;
+  width: 2px;
+  z-index: 1;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ─── Simulation Controls ───────────────────────────────────── */
+.simulation-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.run-btn {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--accent-indigo), var(--accent-purple));
+  border: none;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 20px var(--glow-indigo);
+}
+
+.run-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px var(--glow-indigo);
+}
+
+.run-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.play-icon {
+  font-size: 14px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-banner {
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: var(--accent-red);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-icon {
+  font-size: 16px;
+}
+
+/* ─── Result Dashboard ──────────────────────────────────────── */
+.result-dashboard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.result-empty {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.result-section {
+  margin-bottom: 24px;
+}
+
+.result-section:last-child {
+  margin-bottom: 0;
+}
+
+.result-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  margin: 0 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Histogram */
+.histogram {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.hist-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hist-label {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 12px;
+  color: var(--accent-cyan);
+  min-width: 60px;
+  text-align: right;
+}
+
+.hist-bar-track {
+  flex: 1;
+  height: 22px;
+  background: var(--bg-cell);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hist-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-indigo), var(--accent-purple));
+  border-radius: 4px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 2px;
+}
+
+.hist-bar-measurement {
+  background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+}
+
+.hist-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 50px;
+  text-align: right;
+}
+
+/* State Vector Table */
+.state-vector-table {
+  font-size: 12px;
+}
+
+.sv-header {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  gap: 8px;
+  padding: 6px 8px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sv-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 80px;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--bg-cell);
+  transition: background 0.15s ease;
+}
+
+.sv-row:hover {
+  background: var(--bg-hover);
+}
+
+.sv-label {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  color: var(--accent-cyan);
+}
+
+.sv-amplitude {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  color: var(--text-primary);
+}
+
+.sv-prob {
+  text-align: right;
+  color: var(--accent-purple);
+  font-weight: 600;
+}
+
+/* ─── Example Circuits ──────────────────────────────────────── */
+.example-circuits {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.examples-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  margin: 0 0 14px;
+}
+
+.examples-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.example-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.example-btn:hover {
+  border-color: var(--accent-indigo);
+  background: var(--bg-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.example-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.example-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
