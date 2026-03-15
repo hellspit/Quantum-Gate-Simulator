@@ -19,7 +19,7 @@ MAX_QUBITS = 10
 class QuantumSimulator:
     """Simulates a quantum circuit by evolving a state vector."""
 
-    def __init__(self, num_qubits: int):
+    def __init__(self, num_qubits: int, initial_states: list[int] | None = None):
         if num_qubits < 1 or num_qubits > MAX_QUBITS:
             raise ValueError(
                 f"num_qubits must be between 1 and {MAX_QUBITS}, got {num_qubits}"
@@ -27,12 +27,24 @@ class QuantumSimulator:
         self.num_qubits = num_qubits
         self.dim = 2 ** num_qubits
         self.state = np.zeros(self.dim, dtype=np.complex128)
-        self.state[0] = 1.0  # |00...0⟩
+        
+        # Calculate initial state index based on computational basis
+        self.initial_index = 0
+        if initial_states:
+            if len(initial_states) != num_qubits:
+                raise ValueError("length of initial_states must match num_qubits")
+            for i, bit in enumerate(initial_states):
+                if bit not in (0, 1):
+                    raise ValueError("initial states must be 0 or 1")
+                # MSB is qubit 0
+                self.initial_index |= (bit << (num_qubits - 1 - i))
+                
+        self.state[self.initial_index] = 1.0
 
     def reset(self):
-        """Reset to the |00...0⟩ state."""
+        """Reset to the initial state."""
         self.state = np.zeros(self.dim, dtype=np.complex128)
-        self.state[0] = 1.0
+        self.state[self.initial_index] = 1.0
 
     def apply_gate(
         self,
@@ -133,3 +145,25 @@ class QuantumSimulator:
                     "imag": round(float(amp.imag), 8),
                 })
         return result
+
+    def get_bloch_vectors(self) -> dict[str, list[float]]:
+        """
+        Calculate the Bloch vector (rx, ry, rz) for each qubit.
+        
+        Returns a dictionary mapping qubit index (as string) to [rx, ry, rz].
+        Computed using expectation values: r_i = <psi | sigma_i | psi>.
+        For entangled states, the length of the vector will be < 1.
+        """
+        vectors = {}
+        for i in range(self.num_qubits):
+            op_x = build_single_qubit_operator(SINGLE_QUBIT_GATES['X'], i, self.num_qubits)
+            op_y = build_single_qubit_operator(SINGLE_QUBIT_GATES['Y'], i, self.num_qubits)
+            op_z = build_single_qubit_operator(SINGLE_QUBIT_GATES['Z'], i, self.num_qubits)
+            
+            rx = np.real(np.vdot(self.state, op_x @ self.state))
+            ry = np.real(np.vdot(self.state, op_y @ self.state))
+            rz = np.real(np.vdot(self.state, op_z @ self.state))
+            
+            vectors[str(i)] = [round(float(rx), 4), round(float(ry), 4), round(float(rz), 4)]
+        
+        return vectors

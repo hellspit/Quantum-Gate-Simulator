@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { SimulationResult } from "../types/circuit";
+import BlochSphere from "./BlochSphere";
 
 interface ResultDashboardProps {
   result: SimulationResult | null;
@@ -34,6 +35,30 @@ export default function ResultDashboard({ result }: ResultDashboardProps) {
 
   return (
     <div className="result-dashboard">
+      {/* Bloch Spheres */}
+      {result.bloch_vectors && (
+        <div className="result-section">
+          <h3 className="result-title">Qubit States (Bloch Spheres)</h3>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+              gap: "1rem",
+              marginBottom: "1rem"
+            }}
+          >
+            {Array.from({ length: result.num_qubits }).map((_, i) => {
+              const vector = result.bloch_vectors[i.toString()] || [0, 0, 1];
+              return (
+                <div key={i} style={{ background: "rgba(255,255,255,0.02)", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.05)", overflow: "hidden" }}>
+                  <BlochSphere rx={vector[0]} ry={vector[1]} rz={vector[2]} qubitLabel={i.toString()} />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Probability Distribution */}
       <div className="result-section">
         <h3 className="result-title">Probability Distribution</h3>

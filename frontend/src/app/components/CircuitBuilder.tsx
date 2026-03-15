@@ -6,6 +6,7 @@ import { getGateColor, isMultiQubitGate } from "./GateToolbar";
 
 interface CircuitBuilderProps {
   numQubits: number;
+  initialStates: number[];
   operations: GateOperation[];
   selectedGate: string | null;
   onAddQubit: () => void;
@@ -13,11 +14,13 @@ interface CircuitBuilderProps {
   onPlaceGate: (target: number, step: number) => void;
   onRemoveGate: (id: string) => void;
   onReset: () => void;
+  onToggleInitialState: (qubit: number) => void;
   pendingControl: { gate: string; control: number; step: number } | null;
 }
 
 export default function CircuitBuilder({
   numQubits,
+  initialStates,
   operations,
   selectedGate,
   onAddQubit,
@@ -25,6 +28,7 @@ export default function CircuitBuilder({
   onPlaceGate,
   onRemoveGate,
   onReset,
+  onToggleInitialState,
   pendingControl,
 }: CircuitBuilderProps) {
   // Calculate number of time steps to show
@@ -95,7 +99,13 @@ export default function CircuitBuilder({
             <div key={qubit} className="circuit-row">
               <div className="circuit-label">
                 <span className="qubit-label">q{qubit}</span>
-                <span className="ket-label">|0⟩</span>
+                <button 
+                  className="ket-label hover-toggle" 
+                  onClick={() => onToggleInitialState(qubit)}
+                  title="Click to toggle initial state"
+                >
+                  |{initialStates[qubit] || 0}⟩
+                </button>
               </div>
 
               {Array.from({ length: numSteps }, (_, step) => {

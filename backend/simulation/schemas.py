@@ -15,6 +15,7 @@ class GateOperation(BaseModel):
 class CircuitRequest(BaseModel):
     """Request body for circuit simulation."""
     num_qubits: int = Field(..., ge=1, le=10, description="Number of qubits (1-10)")
+    initial_states: list[int] = Field(default_factory=list, description="Initial state (0 or 1) for each qubit. Defaults to all 0s.")
     operations: list[GateOperation] = Field(default_factory=list, description="Ordered list of gate operations")
     shots: int = Field(default=1024, ge=1, le=10000, description="Number of measurement shots")
 
@@ -31,6 +32,7 @@ class SimulationResult(BaseModel):
     state_vector: list[StateVectorEntry]
     probabilities: dict[str, float]
     measurements: dict[str, int]
+    bloch_vectors: dict[str, list[float]]
     num_qubits: int
 
 

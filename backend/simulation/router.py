@@ -19,7 +19,7 @@ async def simulate_circuit(request: CircuitRequest):
     measurement probabilities, and simulated measurement results.
     """
     try:
-        sim = QuantumSimulator(request.num_qubits)
+        sim = QuantumSimulator(request.num_qubits, request.initial_states)
 
         for op in request.operations:
             sim.apply_gate(
@@ -33,11 +33,13 @@ async def simulate_circuit(request: CircuitRequest):
         ]
         probabilities = sim.get_probabilities()
         measurements = sim.measure(shots=request.shots)
+        bloch_vectors = sim.get_bloch_vectors()
 
         return SimulationResult(
             state_vector=state_vector,
             probabilities=probabilities,
             measurements=measurements,
+            bloch_vectors=bloch_vectors,
             num_qubits=request.num_qubits,
         )
 

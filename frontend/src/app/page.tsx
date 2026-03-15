@@ -17,6 +17,7 @@ function genId() {
 
 export default function Home() {
   const [numQubits, setNumQubits] = useState(2);
+  const [initialStates, setInitialStates] = useState<number[]>([0, 0]);
   const [operations, setOperations] = useState<GateOperation[]>([]);
   const [selectedGate, setSelectedGate] = useState<string | null>(null);
   const [pendingControl, setPendingControl] = useState<{
@@ -86,7 +87,14 @@ export default function Home() {
 
   // ─── Qubit controls ───────────────────────────────────────
   const handleAddQubit = useCallback(() => {
-    setNumQubits((n) => Math.min(n + 1, 10));
+    setNumQubits((n) => {
+      const newN = Math.min(n + 1, 10);
+      setInitialStates((prev) => {
+        if (newN > prev.length) return [...prev, 0];
+        return prev;
+      });
+      return newN;
+    });
   }, []);
 
   const handleRemoveQubit = useCallback(() => {
@@ -100,6 +108,7 @@ export default function Home() {
             (op.control === null || op.control === undefined || op.control < newN)
         )
       );
+      setInitialStates((prev) => prev.slice(0, newN));
       return newN;
     });
   }, []);
@@ -110,6 +119,16 @@ export default function Home() {
     setResult(null);
     setError(null);
     setPendingControl(null);
+    setInitialStates((prev) => Array(prev.length).fill(0));
+  }, []);
+
+  // ─── Initial State Toggle ─────────────────────────────────
+  const handleToggleInitialState = useCallback((qubit: number) => {
+    setInitialStates((prev) => {
+      const next = [...prev];
+      next[qubit] = next[qubit] === 0 ? 1 : 0;
+      return next;
+    });
   }, []);
 
   // ─── Run simulation ───────────────────────────────────────
@@ -119,7 +138,7 @@ export default function Home() {
     try {
       // Sort operations by step order before sending
       const sorted = [...operations].sort((a, b) => a.step - b.step);
-      const res = await simulateCircuit(numQubits, sorted);
+      const res = await simulateCircuit(numQubits, initialStates, sorted);
       setResult(res);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Simulation failed");
@@ -132,6 +151,7 @@ export default function Home() {
   const handleLoadExample = useCallback(
     (exNumQubits: number, exOps: Omit<GateOperation, "id">[]) => {
       setNumQubits(exNumQubits);
+      setInitialStates(Array(exNumQubits).fill(0));
       setOperations(exOps.map((op) => ({ ...op, id: genId() })));
       setResult(null);
       setError(null);
@@ -165,6 +185,7 @@ export default function Home() {
         <div className="circuit-area">
           <CircuitBuilder
             numQubits={numQubits}
+            initialStates={initialStates}
             operations={operations}
             selectedGate={selectedGate}
             onAddQubit={handleAddQubit}
@@ -172,6 +193,7 @@ export default function Home() {
             onPlaceGate={handlePlaceGate}
             onRemoveGate={handleRemoveGate}
             onReset={handleReset}
+            onToggleInitialState={handleToggleInitialState}
             pendingControl={pendingControl}
           />
           <SimulationControls

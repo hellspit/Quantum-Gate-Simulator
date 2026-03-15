@@ -18,6 +18,7 @@ export interface GateOperation {
 
 export interface Circuit {
   num_qubits: number;
+  initial_states: number[];
   operations: GateOperation[];
 }
 
@@ -31,5 +32,6 @@ export interface SimulationResult {
   state_vector: StateVectorEntry[];
   probabilities: Record<string, number>;
   measurements: Record<string, number>;
+  bloch_vectors: Record<string, [number, number, number]>;
   num_qubits: number;
 }

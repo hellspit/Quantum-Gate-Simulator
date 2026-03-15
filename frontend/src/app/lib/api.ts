@@ -8,11 +8,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function simulateCircuit(
   num_qubits: number,
+  initial_states: number[],
   operations: GateOperation[],
   shots: number = 1024
 ): Promise<SimulationResult> {
   const body = {
     num_qubits,
+    initial_states,
     operations: operations.map((op) => ({
       gate: op.gate,
       target: op.target,
