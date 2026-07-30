@@ -49,10 +49,34 @@ body {
   margin-bottom: 24px;
 }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .header-content {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.header-link-btn {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  font-size: 0.95rem;
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.header-link-btn:hover {
+  background: rgba(34, 211, 238, 0.08);
+  border-color: rgba(34, 211, 238, 0.55);
 }
 
 .header-icon {

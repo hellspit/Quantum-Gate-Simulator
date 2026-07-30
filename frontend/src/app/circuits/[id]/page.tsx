@@ -22,7 +22,6 @@ export default function CircuitDetailPage() {
   const circuitId = params.id as string;
   const circuitData = useMemo(() => getCircuitById(circuitId), [circuitId]);
 
-  // Initialize state from circuit data
   const [numQubits, setNumQubits] = useState(circuitData?.qubits ?? 2);
   const [initialStates, setInitialStates] = useState<number[]>(
     circuitData?.initialStates ?? [0, 0]
@@ -40,7 +39,6 @@ export default function CircuitDetailPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ─── Gate selection ───────────────────────────────────────
   const handleSelectGate = useCallback(
     (gateName: string) => {
       if (selectedGate === gateName) {
@@ -54,7 +52,6 @@ export default function CircuitDetailPage() {
     [selectedGate]
   );
 
-  // ─── Place gate on the circuit ────────────────────────────
   const handlePlaceGate = useCallback(
     (qubit: number, step: number) => {
       if (!selectedGate) return;
@@ -85,15 +82,13 @@ export default function CircuitDetailPage() {
         setOperations((prev) => [...prev, op]);
       }
     },
-    [selectedGate, pendingControl]
+    [pendingControl, selectedGate]
   );
 
-  // ─── Remove a gate ────────────────────────────────────────
   const handleRemoveGate = useCallback((id: string) => {
     setOperations((prev) => prev.filter((op) => op.id !== id));
   }, []);
 
-  // ─── Qubit controls ───────────────────────────────────────
   const handleAddQubit = useCallback(() => {
     setNumQubits((n) => {
       const newN = Math.min(n + 1, 10);
@@ -120,7 +115,6 @@ export default function CircuitDetailPage() {
     });
   }, []);
 
-  // ─── Reset ────────────────────────────────────────────────
   const handleReset = useCallback(() => {
     setOperations([]);
     setResult(null);
@@ -129,7 +123,6 @@ export default function CircuitDetailPage() {
     setInitialStates((prev) => Array(prev.length).fill(0));
   }, []);
 
-  // ─── Toggle initial state ────────────────────────────────
   const handleToggleInitialState = useCallback((qubit: number) => {
     setInitialStates((prev) => {
       const next = [...prev];
@@ -138,7 +131,6 @@ export default function CircuitDetailPage() {
     });
   }, []);
 
-  // ─── Run simulation ───────────────────────────────────────
   const handleRun = useCallback(async () => {
     setIsRunning(true);
     setError(null);
@@ -151,64 +143,48 @@ export default function CircuitDetailPage() {
     } finally {
       setIsRunning(false);
     }
-  }, [numQubits, initialStates, operations]);
+  }, [initialStates, numQubits, operations]);
 
-  // ─── 404 ──────────────────────────────────────────────────
   if (!circuitData) {
     return (
       <main className="app-container">
         <header className="app-header">
-          <div className="header-content">
-            <div className="header-icon">⚠️</div>
-            <div>
-              <h1 className="app-title">Circuit Not Found</h1>
-              <p className="app-subtitle">The circuit &quot;{circuitId}&quot; does not exist.</p>
+          <div className="header-row">
+            <div className="header-content">
+              <div className="header-icon">⚠️</div>
+              <div>
+                <h1 className="app-title">Circuit Not Found</h1>
+                <p className="app-subtitle">
+                  The circuit &quot;{circuitId}&quot; does not exist.
+                </p>
+              </div>
             </div>
+            <Link href="/circuits" className="header-link-btn">
+              ← Back to Circuit Library
+            </Link>
           </div>
         </header>
-        <Link
-          href="/circuits"
-          style={{
-            color: "var(--accent-cyan)",
-            textDecoration: "none",
-            marginTop: "1rem",
-            display: "inline-block",
-          }}
-        >
-          ← Back to Circuit Library
-        </Link>
       </main>
     );
   }
 
   return (
     <main className="app-container">
-      {/* Header */}
       <header className="app-header">
-        <div className="header-content">
-          <div className="header-icon">⚛</div>
-          <div>
-            <h1 className="app-title">{circuitData.name}</h1>
-            <p className="app-subtitle">{circuitData.description}</p>
+        <div className="header-row">
+          <div className="header-content">
+            <div className="header-icon">⚛</div>
+            <div>
+              <h1 className="app-title">{circuitData.name}</h1>
+              <p className="app-subtitle">{circuitData.description}</p>
+            </div>
           </div>
+          <Link href="/circuits" className="header-link-btn">
+            ← Circuit Library
+          </Link>
         </div>
-        <Link
-          href="/circuits"
-          style={{
-            color: "var(--accent-cyan)",
-            textDecoration: "none",
-            fontSize: "0.95rem",
-            border: "1px solid rgba(0, 240, 255, 0.3)",
-            padding: "0.5rem 1rem",
-            borderRadius: "8px",
-            transition: "all 0.2s",
-          }}
-        >
-          ← Circuit Library
-        </Link>
       </header>
 
-      {/* Description Card */}
       <div
         style={{
           background: "rgba(255,255,255,0.03)",
@@ -224,12 +200,9 @@ export default function CircuitDetailPage() {
         {circuitData.longDescription}
       </div>
 
-      {/* Gate Toolbar */}
       <GateToolbar onSelectGate={handleSelectGate} selectedGate={selectedGate} />
 
-      {/* Main Content */}
       <div className="main-content">
-        {/* Circuit Area */}
         <div className="circuit-area">
           <CircuitBuilder
             numQubits={numQubits}
@@ -252,7 +225,6 @@ export default function CircuitDetailPage() {
           />
         </div>
 
-        {/* Results Area */}
         <div className="results-area">
           <ResultDashboard result={result} />
         </div>

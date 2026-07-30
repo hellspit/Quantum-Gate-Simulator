@@ -9,34 +9,23 @@ const categories = getCircuitsByCategory();
 export default function CircuitsPage() {
   return (
     <main className="app-container">
-      {/* Header */}
       <header className="app-header">
-        <div className="header-content">
-          <div className="header-icon">🔬</div>
-          <div>
-            <h1 className="app-title">Circuit Library</h1>
-            <p className="app-subtitle">
-              Pre-built quantum circuits — arithmetic, algorithms, and more
-            </p>
+        <div className="header-row">
+          <div className="header-content">
+            <div className="header-icon">🔬</div>
+            <div>
+              <h1 className="app-title">Circuit Library</h1>
+              <p className="app-subtitle">
+                Pre-built quantum circuits — arithmetic, algorithms, and more
+              </p>
+            </div>
           </div>
+          <Link href="/" className="header-link-btn">
+            ← Back to Simulator
+          </Link>
         </div>
-        <Link
-          href="/"
-          style={{
-            color: "var(--accent-cyan)",
-            textDecoration: "none",
-            fontSize: "0.95rem",
-            border: "1px solid rgba(0, 240, 255, 0.3)",
-            padding: "0.5rem 1rem",
-            borderRadius: "8px",
-            transition: "all 0.2s",
-          }}
-        >
-          ← Back to Simulator
-        </Link>
       </header>
 
-      {/* Circuit Categories */}
       {categories.map((category) => (
         <section key={category.title} style={{ marginBottom: "2.5rem" }}>
           <h2
@@ -82,11 +71,11 @@ export default function CircuitsPage() {
                     (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255, 255, 255, 0.06)";
+                    (e.currentTarget as HTMLDivElement).style.borderColor =
+                      "rgba(255, 255, 255, 0.06)";
                     (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
                   }}
                 >
-                  {/* Badge */}
                   <span
                     style={{
                       position: "absolute",
@@ -101,7 +90,9 @@ export default function CircuitsPage() {
                         ? "rgba(0, 240, 255, 0.12)"
                         : "rgba(168, 85, 247, 0.15)",
                       color: isReady ? "var(--accent-cyan)" : "var(--accent-purple)",
-                      border: `1px solid ${isReady ? "rgba(0, 240, 255, 0.3)" : "rgba(168, 85, 247, 0.3)"}`,
+                      border: `1px solid ${
+                        isReady ? "rgba(0, 240, 255, 0.3)" : "rgba(168, 85, 247, 0.3)"
+                      }`,
                     }}
                   >
                     {isReady ? "Try It →" : "Coming Soon"}

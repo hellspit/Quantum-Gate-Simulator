@@ -30,7 +30,6 @@ export default function Home() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // ─── Gate selection ───────────────────────────────────────
   const handleSelectGate = useCallback(
     (gateName: string) => {
       if (selectedGate === gateName) {
@@ -44,18 +43,15 @@ export default function Home() {
     [selectedGate]
   );
 
-  // ─── Place gate on the circuit ────────────────────────────
   const handlePlaceGate = useCallback(
     (qubit: number, step: number) => {
       if (!selectedGate) return;
 
       if (isMultiQubitGate(selectedGate)) {
         if (!pendingControl) {
-          // First click: set control qubit
           setPendingControl({ gate: selectedGate, control: qubit, step });
         } else {
-          // Second click: set target qubit
-          if (qubit === pendingControl.control) return; // same qubit
+          if (qubit === pendingControl.control) return;
           const op: GateOperation = {
             id: genId(),
             gate: pendingControl.gate,
@@ -67,7 +63,6 @@ export default function Home() {
           setPendingControl(null);
         }
       } else {
-        // Single-qubit gate
         const op: GateOperation = {
           id: genId(),
           gate: selectedGate,
@@ -81,12 +76,10 @@ export default function Home() {
     [selectedGate, pendingControl]
   );
 
-  // ─── Remove a gate ────────────────────────────────────────
   const handleRemoveGate = useCallback((id: string) => {
     setOperations((prev) => prev.filter((op) => op.id !== id));
   }, []);
 
-  // ─── Qubit controls ───────────────────────────────────────
   const handleAddQubit = useCallback(() => {
     setNumQubits((n) => {
       const newN = Math.min(n + 1, 10);
@@ -101,7 +94,6 @@ export default function Home() {
   const handleRemoveQubit = useCallback(() => {
     setNumQubits((n) => {
       const newN = Math.max(n - 1, 1);
-      // Remove operations that reference the deleted qubit
       setOperations((ops) =>
         ops.filter(
           (op) =>
@@ -114,7 +106,6 @@ export default function Home() {
     });
   }, []);
 
-  // ─── Reset ────────────────────────────────────────────────
   const handleReset = useCallback(() => {
     setOperations([]);
     setResult(null);
@@ -123,7 +114,6 @@ export default function Home() {
     setInitialStates((prev) => Array(prev.length).fill(0));
   }, []);
 
-  // ─── Initial State Toggle ─────────────────────────────────
   const handleToggleInitialState = useCallback((qubit: number) => {
     setInitialStates((prev) => {
       const next = [...prev];
@@ -132,12 +122,10 @@ export default function Home() {
     });
   }, []);
 
-  // ─── Run simulation ───────────────────────────────────────
   const handleRun = useCallback(async () => {
     setIsRunning(true);
     setError(null);
     try {
-      // Sort operations by step order before sending
       const sorted = [...operations].sort((a, b) => a.step - b.step);
       const res = await simulateCircuit(numQubits, initialStates, sorted);
       setResult(res);
@@ -146,9 +134,8 @@ export default function Home() {
     } finally {
       setIsRunning(false);
     }
-  }, [numQubits, operations]);
+  }, [initialStates, numQubits, operations]);
 
-  // ─── Load example circuit ─────────────────────────────────
   const handleLoadExample = useCallback(
     (exNumQubits: number, exOps: Omit<GateOperation, "id">[]) => {
       setNumQubits(exNumQubits);
@@ -164,39 +151,26 @@ export default function Home() {
 
   return (
     <main className="app-container">
-      {/* Header */}
       <header className="app-header">
-        <div className="header-content">
-          <div className="header-icon">⚛</div>
-          <div>
-            <h1 className="app-title">Quantum Gate Simulator</h1>
-            <p className="app-subtitle">
-              Build circuits, simulate quantum states, visualize results
-            </p>
+        <div className="header-row">
+          <div className="header-content">
+            <div className="header-icon">⚛</div>
+            <div>
+              <h1 className="app-title">Quantum Gate Simulator</h1>
+              <p className="app-subtitle">
+                Build circuits, simulate quantum states, visualize results
+              </p>
+            </div>
           </div>
+          <Link href="/circuits" className="header-link-btn">
+            Circuit Library →
+          </Link>
         </div>
-        <Link
-          href="/circuits"
-          style={{
-            color: "var(--accent-cyan)",
-            textDecoration: "none",
-            fontSize: "0.95rem",
-            border: "1px solid rgba(0, 240, 255, 0.3)",
-            padding: "0.5rem 1rem",
-            borderRadius: "8px",
-            transition: "all 0.2s",
-          }}
-        >
-          Circuit Library →
-        </Link>
       </header>
 
-      {/* Gate Toolbar */}
       <GateToolbar onSelectGate={handleSelectGate} selectedGate={selectedGate} />
 
-      {/* Main Content */}
       <div className="main-content">
-        {/* Circuit Area */}
         <div className="circuit-area">
           <CircuitBuilder
             numQubits={numQubits}
@@ -219,13 +193,11 @@ export default function Home() {
           />
         </div>
 
-        {/* Results Area */}
         <div className="results-area">
           <ResultDashboard result={result} />
         </div>
       </div>
 
-      {/* Example Circuits */}
       <ExampleCircuits onLoadExample={handleLoadExample} />
     </main>
   );
