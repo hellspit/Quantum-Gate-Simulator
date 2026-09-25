@@ -1,42 +1,66 @@
 # Quantum Gate Simulator ⚛️
 
-A high-performance, interactive Quantum Circuit Simulator with exact state-vector modeling and a visually rich Next.js 3D frontend.
+An interactive quantum circuit simulator (**quantum/lab**). Place gates on wires, run an exact state-vector simulation, and see the result as probabilities, sampled measurements, complex amplitudes and live 3D Bloch spheres.
 
-![Quantum Gate Simulator Interface](docs/screenshot.png) <!-- Add a screenshot here later! -->
+![Quantum Gate Simulator workspace](docs/workspace.png)
 
 ## Features
 
-- **Up to 10 Qubits**: Exact mathematical simulation using a pure Python/NumPy state vector engine (1,024-dimensional Hilbert space).
-- **Custom Initial States**: Initialize any qubit to `|0⟩` or `|1⟩` instantly by clicking its label.
-- **9 Core Gates**: Apply `X`, `Y`, `Z`, `H`, `S`, `T`, `CNOT`, `CZ`, and `SWAP` gates.
-- **Visual Circuit Builder**: Drag-and-drop style interface with intelligent multi-qubit routing (Control → Target connector lines).
-- **3D Bloch Sphere Visualization**: Real-time rendering of qubit states on interactive 3D Bloch spheres using `Three.js`.
-- **Measurement & Probability**: View histogram charts of sampling measurements (up to 10,000 shots) and exact theoretical state vectors featuring complex amplitudes.
+- **Up to 10 qubits**: exact simulation with a pure Python/NumPy state-vector engine (up to a 1,024-dimensional Hilbert space).
+- **10 gates**: `H`, `X`, `Y`, `Z`, `S`, `T`, `CNOT`, `CZ`, `SWAP` and the 3-qubit `CCNOT` (Toffoli).
+- **Visual circuit builder**: select a gate and click a wire, or drag it onto the grid. Multi-qubit gates draw control → target connectors. Click a placed gate to remove it.
+- **Custom inputs and labels**: click `|0⟩` to flip a qubit's initial state to `|1⟩`, and give any wire a label.
+- **Undo / redo and export**: full edit history, plus export of the circuit as `.json`.
+- **Results dashboard**:
+  - **Probabilities**: the exact chance of each basis state.
+  - **Measurements**: sampled counts (128 to 10,000 shots), with markers for the exact probabilities.
+  - **State vector**: complex amplitudes, probabilities and relative phases.
+- **3D Bloch spheres**: a per-qubit sphere built with React Three Fiber. It shows pure and mixed (entangled) states, and a full-screen explorer lets you rotate every qubit, with linked rotations.
+- **Circuit library**: 10 ready-to-run circuits, each with a description and theory notes (see below).
+- **Keyboard shortcuts**: `H`–`T` select a gate, `Esc` cancels, `Ctrl/⌘ + Enter` runs, `Ctrl/⌘ + Z` / `Y` undo and redo.
+
+| Results | Bloch explorer |
+| :---: | :---: |
+| ![Probability results for a Bell state](docs/results.png) | ![Bloch sphere explorer](docs/bloch-explorer.png) |
+
+## Circuit Library
+
+![Circuit library](docs/circuit-library.png)
+
+| Category | Circuits |
+| :--- | :--- |
+| **Fundamentals** | Superposition |
+| **Entanglement & Teleportation** | Bell State, GHZ State, Quantum Teleportation |
+| **Arithmetic** | Half Adder, Full Adder, Quantum Multiplier (3 × 2 = 6 on 8 qubits) |
+| **Algorithms** | Deutsch-Jozsa, Bernstein-Vazirani, Grover's Search |
+| **Error Correction** *(planned)* | Bit-Flip Code, Phase-Flip Code |
+
+The workspace also has quick starts for a Bell pair, Superposition, a GHZ state and a State swap.
 
 ## Tech Stack
 
 | Component | Technology | Description |
 | :--- | :--- | :--- |
-| **Backend Engine** | Python, FastAPI, NumPy | Handles tensor calculations, gate matrix multiplications, and measurement sampling. |
-| **Frontend UI** | Next.js 16, React, TypeScript | Hosts the interactive grid, drag-n-drop interface, and simulation controls. |
-| **Styling** | Tailwind CSS 4 | Custom dark "Quantum" theme with neon glow and glassmorphism. |
-| **3D Rendering** | React Three Fiber / Drei | Real-time interactive 3D Bloch spheres. |
+| **Backend engine** | Python, FastAPI, NumPy | Tensor products, gate matrix application, Bloch vectors and measurement sampling. |
+| **Frontend UI** | Next.js 16, React 19, TypeScript | Circuit builder, simulation controls, results dashboard and circuit library. |
+| **Styling** | Tailwind CSS 4 | Custom dark "quantum" theme with IBM Plex Sans / Mono. |
+| **3D rendering** | Three.js, React Three Fiber, Drei | Interactive Bloch spheres. |
 
 ---
 
 ## 🚀 Getting Started
 
-To run the full-stack application locally, you will need to start both the Python backend API and the Next.js frontend simultaneously in two separate terminal windows.
+Run the Python backend and the Next.js frontend at the same time, in two terminal windows.
 
-### 1. Start the Backend API
-
-Make sure you have Python installed.
+### 1. Start the backend API
 
 ```bash
 cd backend
 
-# Create a virtual environment (if you haven't already: python -m venv venv)
-# Activate the virtual environment:
+# Create a virtual environment (first time only)
+python -m venv venv
+
+# Activate it
 # Windows:
 .\venv\Scripts\activate
 # Mac/Linux:
@@ -49,38 +73,56 @@ pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-The backend API will be available at `http://localhost:8000`. You can view the automatic API docs at `http://localhost:8000/docs`.
+The API runs at `http://localhost:8000`, with interactive docs at `http://localhost:8000/docs`.
 
-### 2. Start the Frontend UI
+### 2. Start the frontend
 
-Make sure you have Node.js installed. Open a **new terminal window**:
+In a **new terminal window**:
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start the development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to start building quantum circuits!
+Open [http://localhost:3000](http://localhost:3000) and start building circuits.
+
+The frontend calls `http://localhost:8000` by default. To use a different backend, set `NEXT_PUBLIC_API_URL`.
+
+### Running the tests
+
+```bash
+cd backend
+pytest
+```
+
+The suite covers the engine, the API and the arithmetic and algorithm circuits.
 
 ---
 
-## Example Circuits inside the App
+## API
 
-The frontend includes pre-built famous circuits to instantly demonstrate capabilities:
-- **Superposition**: Creates an equal probability of all states using Hadamard gates.
-- **Bell State**: Creates quantum entanglement between 2 qubits (EPR pair).
-- **GHZ State**: Creates macroscopic quantum entanglement across 3 qubits.
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/simulate` | Simulate a circuit: `num_qubits` (1–10), `initial_states`, `operations`, `shots` (1–10,000). Returns probabilities, measurement counts, the state vector and per-qubit Bloch vectors. |
+| `GET` | `/api/gates` | List the supported gates. |
 
-## Project Architecture
+## Project Structure
 
-- `/backend/simulation/engine.py` - Core `QuantumSimulator` class. Calculates Kronecker (tensor) products securely up to 10 qubits. Extracts exact bloch vector `(rx, ry, rz)` coordinates per-qubit.
-- `/frontend/src/app/components/CircuitBuilder.tsx` - Next.js grid system handling logic for multi-qubit placement and state rendering.
-- `/frontend/src/app/components/BlochSphere.tsx` - Handles the 3D `<Canvas>` mappings to render axes and vectors interactively.
+```
+backend/
+  main.py                    FastAPI app and CORS setup
+  simulation/engine.py       QuantumSimulator: state vector, gate application, Bloch vectors, sampling
+  simulation/gates.py        Gate matrices
+  simulation/router.py       /api/simulate and /api/gates
+  simulation/schemas.py      Request / response models
+  tests/                     Engine, API, arithmetic and algorithm tests
+frontend/src/app/
+  page.tsx                   Workspace
+  circuits/                  Circuit library and per-circuit pages
+  components/                Workbench, CircuitBuilder, GateToolbar, ResultDashboard, BlochSphere, BlochExplorer, …
+  lib/                       Gate data, circuit library data, API client
+```
 
 ## License
 

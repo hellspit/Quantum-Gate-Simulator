@@ -62,3 +62,5 @@ docs/
 *.tmp
 *.log
 
+# Launch video output
+brag-output/
