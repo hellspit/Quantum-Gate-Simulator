@@ -10,7 +10,7 @@ export async function simulateCircuit(
   num_qubits: number,
   initial_states: number[],
   operations: GateOperation[],
-  shots: number = 1024
+  shots: number = 1024,
 ): Promise<SimulationResult> {
   const body = {
     num_qubits,
@@ -19,6 +19,7 @@ export async function simulateCircuit(
       gate: op.gate,
       target: op.target,
       control: op.control ?? null,
+      control2: op.control2 ?? null,
     })),
     shots,
   };

@@ -1,0 +1,67 @@
+{
+  "half-adder": {
+    "id": "half-adder",
+    "name": "Half Adder",
+    "category": "Arithmetic Circuits",
+    "description": "Add two 1-bit inputs and inspect their sum and carry. Starts with 1 + 1 = 2.",
+    "longDescription": "This reversible half adder preserves A on q0 and B on q1. Two CNOT gates compute Sum = A XOR B on q2, and a Toffoli (CCNOT) gate computes Carry = A AND B on q3. Both output qubits must start at 0. Toggle the initial states of q0 and q1 to try all four input combinations. The result is 2 × Carry + Sum: read the output in the order q3, q2. The default 1 + 1 gives Sum = 0 and Carry = 1, so the complete q0-to-q3 measurement is |1101⟩. The inputs are preserved to make the operation reversible; the same gates also work coherently on superpositions.",
+    "qubits": 4,
+    "initialStates": [1, 1, 0, 0],
+    "qubitLabels": ["A", "B", "Sum", "Carry"],
+    "registerGuide": {
+      "inputs": "A: q0 · B: q1. Toggle their initial states to try another addition.",
+      "outputs": "Sum: q2 · Carry: q3. Value = 2 × Carry + Sum. Start both at 0."
+    },
+    "operations": [
+      { "gate": "CNOT", "control": 0, "target": 2, "step": 0 },
+      { "gate": "CNOT", "control": 1, "target": 2, "step": 1 },
+      { "gate": "CCNOT", "control": 0, "control2": 1, "target": 3, "step": 2 }
+    ]
+  },
+  "full-adder": {
+    "id": "full-adder",
+    "name": "Full Adder",
+    "category": "Arithmetic Circuits",
+    "description": "Add A, B, and a carry-in bit while preserving all three inputs. Starts with 1 + 1 + 1 = 3.",
+    "longDescription": "This five-qubit full adder keeps A on q0, B on q1, and Carry-in on q2. Three CNOT gates compute Sum = A XOR B XOR Carry-in on q3. Three Toffoli gates compute Carry-out = (A AND B) XOR (A AND Carry-in) XOR (B AND Carry-in) on q4. Carry-out is 1 when at least two inputs are 1. Start q3 and q4 at 0, then toggle q0–q2 to explore all eight inputs. The numerical result is 2 × Carry-out + Sum, with the output read as q4, q3. The default 1 + 1 + 1 gives Sum = 1 and Carry-out = 1, producing the complete measurement |11111⟩. Preserving the inputs makes this a reversible building block for larger addition circuits.",
+    "qubits": 5,
+    "initialStates": [1, 1, 1, 0, 0],
+    "qubitLabels": ["A", "B", "Cin", "Sum", "Cout"],
+    "registerGuide": {
+      "inputs": "A: q0 · B: q1 · Carry-in: q2. Toggle these three initial states.",
+      "outputs": "Sum: q3 · Carry-out: q4. Value = 2 × Carry-out + Sum. Start both at 0."
+    },
+    "operations": [
+      { "gate": "CNOT", "control": 0, "target": 3, "step": 0 },
+      { "gate": "CNOT", "control": 1, "target": 3, "step": 1 },
+      { "gate": "CNOT", "control": 2, "target": 3, "step": 2 },
+      { "gate": "CCNOT", "control": 0, "control2": 1, "target": 4, "step": 3 },
+      { "gate": "CCNOT", "control": 0, "control2": 2, "target": 4, "step": 4 },
+      { "gate": "CCNOT", "control": 1, "control2": 2, "target": 4, "step": 5 }
+    ]
+  },
+  "quantum-multiplier": {
+    "id": "quantum-multiplier",
+    "name": "Quantum Multiplier",
+    "category": "Arithmetic Circuits",
+    "description": "Multiply two 2-bit registers into a 4-bit product. Starts with 3 × 2 = 6.",
+    "longDescription": "This compact eight-qubit multiplier adds binary partial products using CNOT and Toffoli gates. Register A is q0q1 (A1A0), register B is q2q3 (B1B0), and the product is q4q5q6q7 (P3P2P1P0), with the most significant bit first in each register. Both inputs are preserved and all four product qubits must start at 0. Toggle q0–q3 to multiply any two integers from 0 to 3. The default A = 11 (3), B = 10 (2) produces P = 0110 (6), so the complete measurement is |11100110⟩. The circuit forms A0B0, adds the cross terms A1B0 and A0B1, and combines their carry with A1B1. It temporarily uses P2 for a cross term, uncomputes it, then writes the final high bits. For two-bit inputs, a carry from the cross terms implies A1B1 = 1, allowing the high product bit to reuse that carry without another helper qubit. This is a fixed 2-bit multiplication example, with a full 4-bit output covering products up to 9; larger registers require a larger circuit.",
+    "qubits": 8,
+    "initialStates": [1, 1, 1, 0, 0, 0, 0, 0],
+    "qubitLabels": ["A1", "A0", "B1", "B0", "P3", "P2", "P1", "P0"],
+    "registerGuide": {
+      "inputs": "A: q0q1 · B: q2q3. Two bits each, most significant first; values 0–3.",
+      "outputs": "Product: q4q5q6q7, most significant first. Start all four at 0."
+    },
+    "operations": [
+      { "gate": "CCNOT", "control": 1, "control2": 3, "target": 7, "step": 0 },
+      { "gate": "CCNOT", "control": 0, "control2": 3, "target": 6, "step": 1 },
+      { "gate": "CCNOT", "control": 1, "control2": 2, "target": 5, "step": 2 },
+      { "gate": "CCNOT", "control": 6, "control2": 5, "target": 4, "step": 3 },
+      { "gate": "CNOT", "control": 5, "target": 6, "step": 4 },
+      { "gate": "CCNOT", "control": 1, "control2": 2, "target": 5, "step": 5 },
+      { "gate": "CCNOT", "control": 0, "control2": 2, "target": 5, "step": 6 },
+      { "gate": "CNOT", "control": 4, "target": 5, "step": 7 }
+    ]
+  }
+}

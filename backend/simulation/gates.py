@@ -2,7 +2,7 @@
 Quantum gate matrix definitions and helper utilities.
 
 All gates are represented as NumPy complex128 matrices.
-Single-qubit gates are 2×2; multi-qubit gates are 4×4.
+Single-qubit gates are 2×2; two-qubit gates are 4×4; Toffoli is 8×8.
 """
 
 import numpy as np
@@ -70,7 +70,12 @@ MULTI_QUBIT_GATES = {
     "CNOT": CNOT, "CZ": CZ, "SWAP": SWAP,
 }
 
-ALL_GATES = {**SINGLE_QUBIT_GATES, **MULTI_QUBIT_GATES}
+# Toffoli: the first two qubits control X on the third.
+CCNOT = np.eye(8, dtype=np.complex128)
+CCNOT[[6, 7]] = CCNOT[[7, 6]]
+THREE_QUBIT_GATES = {"CCNOT": CCNOT}
+
+ALL_GATES = {**SINGLE_QUBIT_GATES, **MULTI_QUBIT_GATES, **THREE_QUBIT_GATES}
 
 GATE_INFO = [
     {"name": "X",    "num_qubits": 1, "description": "Pauli-X (NOT) gate"},
@@ -82,6 +87,7 @@ GATE_INFO = [
     {"name": "CNOT", "num_qubits": 2, "description": "Controlled-NOT gate"},
     {"name": "CZ",   "num_qubits": 2, "description": "Controlled-Z gate"},
     {"name": "SWAP", "num_qubits": 2, "description": "SWAP gate"},
+    {"name": "CCNOT", "num_qubits": 3, "description": "Toffoli (controlled-controlled-NOT) gate"},
 ]
 
 

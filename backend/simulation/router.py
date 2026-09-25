@@ -26,6 +26,7 @@ async def simulate_circuit(request: CircuitRequest):
                 gate_name=op.gate,
                 target=op.target,
                 control=op.control,
+                control2=op.control2,
             )
 
         state_vector = [

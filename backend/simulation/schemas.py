@@ -7,9 +7,10 @@ from pydantic import BaseModel, Field
 
 class GateOperation(BaseModel):
     """A single gate operation in a circuit."""
-    gate: str = Field(..., description="Gate name (X, Y, Z, H, S, T, CNOT, CZ, SWAP)")
+    gate: str = Field(..., description="Gate name (X, Y, Z, H, S, T, CNOT, CZ, SWAP, CCNOT)")
     target: int = Field(..., ge=0, description="Target qubit index")
     control: int | None = Field(None, ge=0, description="Control qubit index (for multi-qubit gates)")
+    control2: int | None = Field(None, ge=0, description="Second control qubit index (CCNOT only)")
 
 
 class CircuitRequest(BaseModel):

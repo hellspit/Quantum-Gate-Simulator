@@ -1,0 +1,63 @@
+{
+  "deutsch-jozsa": {
+    "id": "deutsch-jozsa",
+    "name": "Deutsch-Jozsa",
+    "category": "Algorithms",
+    "description": "Identifies a balanced XOR function using one quantum oracle query.",
+    "longDescription": "Deutsch–Jozsa distinguishes a constant function from a balanced function, assuming it is one of the two. This example uses two input qubits, q0 and q1, and the balanced oracle f(x0, x1) = x0 XOR x1. The helper qubit q2 starts in |1⟩. Hadamard gates prepare the inputs in superposition and the helper in |−⟩; two CNOT gates implement a single query to the XOR oracle. Final Hadamard gates on the inputs produce q0q1 = 11 with certainty, identifying the function as balanced. A constant oracle would produce 00 on the input register. The dashboard displays bits in q0, q1, q2 order, so this circuit gives |110⟩ and |111⟩ with 50% probability each. The last bit belongs to the helper and is not part of the answer. To compare with the constant-zero function, remove both CNOT gates and run again: the outcomes become |000⟩ and |001⟩.",
+    "qubits": 3,
+    "initialStates": [0, 0, 1],
+    "operations": [
+      { "gate": "H", "target": 0, "control": null, "step": 0 },
+      { "gate": "H", "target": 1, "control": null, "step": 0 },
+      { "gate": "H", "target": 2, "control": null, "step": 0 },
+      { "gate": "CNOT", "target": 2, "control": 0, "step": 1 },
+      { "gate": "CNOT", "target": 2, "control": 1, "step": 2 },
+      { "gate": "H", "target": 0, "control": null, "step": 3 },
+      { "gate": "H", "target": 1, "control": null, "step": 3 }
+    ]
+  },
+  "bernstein-vazirani": {
+    "id": "bernstein-vazirani",
+    "name": "Bernstein-Vazirani",
+    "category": "Algorithms",
+    "description": "Recovers the hidden three-bit string 101 with one quantum oracle query.",
+    "longDescription": "Bernstein–Vazirani recovers a hidden bit string s from the oracle f(x) = s·x mod 2 using one quantum query, compared with n classical queries for an n-bit string. This example hides s = 101 across q0, q1, and q2, so the oracle computes x0 XOR x2. The helper q3 starts in |1⟩. Hadamard gates put the input register in superposition and the helper in |−⟩. CNOT gates from q0 and q2 to q3 implement the oracle and encode the secret in the input phases. Final Hadamard gates recover 101 on q0q1q2 with certainty. The dashboard orders bits as q0, q1, q2, q3 and therefore shows |1010⟩ and |1011⟩ with 50% probability each. Ignore the last helper bit when reading the answer. Removing the CNOT controlled by q2 changes the secret to 100; adding a CNOT from q1 to q3 in its own step between the Hadamard layers adds the middle bit.",
+    "qubits": 4,
+    "initialStates": [0, 0, 0, 1],
+    "operations": [
+      { "gate": "H", "target": 0, "control": null, "step": 0 },
+      { "gate": "H", "target": 1, "control": null, "step": 0 },
+      { "gate": "H", "target": 2, "control": null, "step": 0 },
+      { "gate": "H", "target": 3, "control": null, "step": 0 },
+      { "gate": "CNOT", "target": 3, "control": 0, "step": 1 },
+      { "gate": "CNOT", "target": 3, "control": 2, "step": 2 },
+      { "gate": "H", "target": 0, "control": null, "step": 3 },
+      { "gate": "H", "target": 1, "control": null, "step": 3 },
+      { "gate": "H", "target": 2, "control": null, "step": 3 }
+    ]
+  },
+  "grovers-search": {
+    "id": "grovers-search",
+    "name": "Grover's Search",
+    "category": "Algorithms",
+    "description": "Finds the marked state |11⟩ among four possibilities in one Grover iteration.",
+    "longDescription": "Grover's algorithm searches for a marked state by amplifying its amplitude. This compact example uses two qubits and marks |11⟩ among the four states |00⟩, |01⟩, |10⟩, and |11⟩. Initial Hadamard gates create equal amplitudes. The first CZ gate is the oracle: it flips only the phase of |11⟩. The remaining H, X, CZ, X, H layers implement the diffusion operation, up to an irrelevant global phase, to amplify the marked state. For one marked state among four, a single oracle-and-diffusion iteration reaches 100% probability of |11⟩ in this ideal simulator. There is no helper qubit; both displayed bits are the answer. This gate sequence finishes in −|11⟩, so the state-vector table shows amplitude −1 while the probability is still 100%. In larger search spaces, Grover's algorithm generally requires multiple iterations and gives a quadratic query improvement over classical unstructured search.",
+    "qubits": 2,
+    "initialStates": [0, 0],
+    "operations": [
+      { "gate": "H", "target": 0, "control": null, "step": 0 },
+      { "gate": "H", "target": 1, "control": null, "step": 0 },
+      { "gate": "CZ", "target": 1, "control": 0, "step": 1 },
+      { "gate": "H", "target": 0, "control": null, "step": 2 },
+      { "gate": "H", "target": 1, "control": null, "step": 2 },
+      { "gate": "X", "target": 0, "control": null, "step": 3 },
+      { "gate": "X", "target": 1, "control": null, "step": 3 },
+      { "gate": "CZ", "target": 1, "control": 0, "step": 4 },
+      { "gate": "X", "target": 0, "control": null, "step": 5 },
+      { "gate": "X", "target": 1, "control": null, "step": 5 },
+      { "gate": "H", "target": 0, "control": null, "step": 6 },
+      { "gate": "H", "target": 1, "control": null, "step": 6 }
+    ]
+  }
+}

@@ -1,149 +1,183 @@
-"use client";
-
-import React from "react";
+﻿"use client";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { getCircuitsByCategory } from "../lib/circuitData";
-
-const categories = getCircuitsByCategory();
-
+import { ALL_CIRCUITS } from "../lib/circuitData";
+import CircuitPreview from "../components/CircuitPreview";
+import Icon from "../components/Icon";
+const categories = [
+  "All circuits",
+  ...Array.from(new Set(ALL_CIRCUITS.map((c) => c.category))),
+];
+const readyCount = ALL_CIRCUITS.filter(
+  (circuit) => circuit.status === "ready",
+).length;
 export default function CircuitsPage() {
+  const [category, setCategory] = useState("All circuits");
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(
+    () =>
+      ALL_CIRCUITS.filter(
+        (c) =>
+          (category === "All circuits" || c.category === category) &&
+          `${c.name} ${c.description}`
+            .toLowerCase()
+            .includes(query.toLowerCase()),
+      ),
+    [category, query],
+  );
+  const ready = filtered.filter((c) => c.status === "ready"),
+    upcoming = filtered.filter((c) => c.status !== "ready");
   return (
-    <main className="app-container">
-      <header className="app-header">
-        <div className="header-row">
-          <div className="header-content">
-            <div className="header-icon">🔬</div>
-            <div>
-              <h1 className="app-title">Circuit Library</h1>
-              <p className="app-subtitle">
-                Pre-built quantum circuits — arithmetic, algorithms, and more
-              </p>
-            </div>
+    <main className="app-container library-page" id="main-content">
+      <header className="workspace-heading">
+        <div>
+          <div className="eyebrow page-eyebrow">
+            <span>Explore / Circuit library</span>
+            <span className="eyebrow-rule" />
           </div>
-          <Link href="/" className="header-link-btn">
-            ← Back to Simulator
-          </Link>
+          <h1>A starting point for discovery.</h1>
+          <p>
+            Foundational ideas, expressed in gates. Open a circuit and make it
+            your own.
+          </p>
+        </div>
+        <div className="library-totals">
+          <strong>{String(readyCount).padStart(2, "0")}</strong>
+          <span>
+            experiments
+            <br />
+            ready to explore
+          </span>
         </div>
       </header>
-
-      {categories.map((category) => (
-        <section key={category.title} style={{ marginBottom: "2.5rem" }}>
-          <h2
-            style={{
-              fontSize: "1.25rem",
-              color: "var(--accent-purple)",
-              marginBottom: "1rem",
-              borderBottom: "1px solid rgba(168, 85, 247, 0.2)",
-              paddingBottom: "0.5rem",
-            }}
-          >
-            {category.title}
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            {category.circuits.map((circuit) => {
-              const isReady = circuit.status === "ready";
-
-              const card = (
-                <div
-                  key={circuit.id}
-                  className="glass-card"
-                  style={{
-                    padding: "1.25rem",
-                    borderRadius: "12px",
-                    border: "1px solid rgba(255, 255, 255, 0.06)",
-                    background: "rgba(255, 255, 255, 0.03)",
-                    position: "relative",
-                    overflow: "hidden",
-                    cursor: isReady ? "pointer" : "default",
-                    transition: "border-color 0.3s, transform 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor = isReady
-                      ? "rgba(0, 240, 255, 0.4)"
-                      : "rgba(255, 255, 255, 0.1)";
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLDivElement).style.borderColor =
-                      "rgba(255, 255, 255, 0.06)";
-                    (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-                  }}
-                >
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "0.75rem",
-                      right: "0.75rem",
-                      fontSize: "0.7rem",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      padding: "0.2rem 0.5rem",
-                      borderRadius: "4px",
-                      background: isReady
-                        ? "rgba(0, 240, 255, 0.12)"
-                        : "rgba(168, 85, 247, 0.15)",
-                      color: isReady ? "var(--accent-cyan)" : "var(--accent-purple)",
-                      border: `1px solid ${
-                        isReady ? "rgba(0, 240, 255, 0.3)" : "rgba(168, 85, 247, 0.3)"
-                      }`,
-                    }}
-                  >
-                    {isReady ? "Try It →" : "Coming Soon"}
+      <div className="library-tools">
+        <div
+          className="category-filters"
+          aria-label="Filter circuits by category"
+        >
+          {categories.map((c) => (
+            <button
+              key={c}
+              className={category === c ? "active" : ""}
+              aria-pressed={category === c}
+              onClick={() => setCategory(c)}
+            >
+              {c === "Entanglement & Teleportation"
+                ? "Entanglement"
+                : c === "Arithmetic Circuits"
+                  ? "Arithmetic"
+                  : c}
+            </button>
+          ))}
+        </div>
+        <label className="library-search">
+          <Icon name="search" size={16} />
+          <input
+            aria-label="Search circuits"
+            placeholder="Find a circuit…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          {query && (
+            <button onClick={() => setQuery("")} aria-label="Clear search">
+              <Icon name="close" size={14} />
+            </button>
+          )}
+        </label>
+      </div>
+      {ready.length > 0 && (
+        <>
+          <div className="library-group-title">
+            <h2>Ready to explore</h2>
+            <span className="mono">
+              {String(ready.length).padStart(2, "0")} CIRCUITS
+            </span>
+          </div>
+          <div className="library-grid">
+            {ready.map((circuit, index) => (
+              <Link
+                className="library-card"
+                href={`/circuits/${circuit.id}`}
+                key={circuit.id}
+              >
+                <div className="library-card-top">
+                  <span className="eyebrow">
+                    {circuit.category.split(" & ")[0]}
                   </span>
-
-                  <h3 style={{ fontSize: "1.1rem", color: "#fff", marginBottom: "0.5rem" }}>
-                    {circuit.name}
-                  </h3>
-
-                  <p
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "rgba(255, 255, 255, 0.5)",
-                      lineHeight: 1.5,
-                      marginBottom: "0.75rem",
-                    }}
-                  >
-                    {circuit.description}
-                  </p>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      fontSize: "0.8rem",
-                      color: "rgba(0, 240, 255, 0.7)",
-                    }}
-                  >
-                    <span>⚛ {circuit.qubits} qubits</span>
-                  </div>
+                  <span className="library-card-index">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
                 </div>
-              );
-
-              if (isReady) {
-                return (
-                  <Link
-                    key={circuit.id}
-                    href={`/circuits/${circuit.id}`}
-                    style={{ textDecoration: "none" }}
-                  >
-                    {card}
-                  </Link>
-                );
-              }
-
-              return <React.Fragment key={circuit.id}>{card}</React.Fragment>;
-            })}
+                <div className="library-preview">
+                  <CircuitPreview
+                    operations={circuit.operations}
+                    qubits={circuit.qubits}
+                  />
+                </div>
+                <h3>{circuit.name}</h3>
+                <p>{circuit.description}</p>
+                <div className="library-card-footer">
+                  <span>
+                    {circuit.qubits} qubits
+                    <span className="status-divider">/</span>
+                    {circuit.operations.length} gates
+                  </span>
+                  <span className="library-open">
+                    Open circuit <Icon name="arrow" size={16} />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+      {upcoming.length > 0 && (
+        <section className="roadmap-section">
+          <div className="library-group-title">
+            <div>
+              <h2>On the horizon</h2>
+              <p>The next chapter of the library.</p>
+            </div>
+            <span className="mono">
+              {String(upcoming.length).padStart(2, "0")} PLANNED
+            </span>
+          </div>
+          <div className="roadmap-grid">
+            {upcoming.map((circuit) => (
+              <div className="roadmap-item" key={circuit.id}>
+                <div>
+                  <span className="eyebrow">{circuit.category}</span>
+                  <h3>{circuit.name}</h3>
+                  <p>{circuit.description}</p>
+                </div>
+                <span className="planned-badge">Planned</span>
+              </div>
+            ))}
           </div>
         </section>
-      ))}
+      )}
+      {!filtered.length && (
+        <div className="library-no-results">
+          <Icon name="search" size={30} />
+          <h2>No circuits found</h2>
+          <p>Try a different search or choose another category.</p>
+          <button
+            className="button-secondary"
+            onClick={() => {
+              setQuery("");
+              setCategory("All circuits");
+            }}
+          >
+            Reset filters
+          </button>
+        </div>
+      )}
+      <div className="library-bottom">
+        <span>Have an experiment in mind?</span>
+        <Link href="/">
+          Build it in the workspace <Icon name="arrow" size={16} />
+        </Link>
+      </div>
     </main>
   );
 }

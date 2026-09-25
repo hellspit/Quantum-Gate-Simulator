@@ -85,9 +85,9 @@ class TestGatesEndpoint:
         response = client.get("/api/gates")
         assert response.status_code == 200
         gates = response.json()
-        assert len(gates) == 9
+        assert len(gates) == 10
         gate_names = {g["name"] for g in gates}
-        assert gate_names == {"X", "Y", "Z", "H", "S", "T", "CNOT", "CZ", "SWAP"}
+        assert gate_names == {"X", "Y", "Z", "H", "S", "T", "CNOT", "CZ", "SWAP", "CCNOT"}
 
     def test_gate_structure(self):
         response = client.get("/api/gates")

@@ -51,6 +51,7 @@ class QuantumSimulator:
         gate_name: str,
         target: int,
         control: int | None = None,
+        control2: int | None = None,
     ):
         """
         Apply a quantum gate to the state vector.
@@ -59,8 +60,30 @@ class QuantumSimulator:
         For multi-qubit gates (CNOT, CZ): `control` is the control qubit,
             `target` is the target qubit.
         For SWAP: `control` and `target` are the two qubits to swap.
+        For CCNOT: both `control` and `control2` must be 1 to flip `target`.
         """
         gate_name = gate_name.upper()
+
+        if control2 is not None and gate_name != "CCNOT":
+            raise ValueError("Only CCNOT accepts a second control qubit")
+
+        if gate_name == "CCNOT":
+            if control is None or control2 is None:
+                raise ValueError("Gate CCNOT requires two control qubits")
+            for label, qubit in (("Target", target), ("Control", control), ("Second control", control2)):
+                if qubit < 0 or qubit >= self.num_qubits:
+                    raise ValueError(f"{label} qubit {qubit} out of range [0, {self.num_qubits - 1}]")
+            if len({control, control2, target}) != 3:
+                raise ValueError("CCNOT control and target qubits must all be different")
+
+            # This self-inverse permutation preserves complex amplitudes and
+            # supports arbitrary wire ordering without a dense 2^n operator.
+            indices = np.arange(self.dim)
+            controls = (1 << (self.num_qubits - 1 - control)) | (1 << (self.num_qubits - 1 - control2))
+            target_mask = 1 << (self.num_qubits - 1 - target)
+            permutation = np.where((indices & controls) == controls, indices ^ target_mask, indices)
+            self.state = self.state[permutation]
+            return
 
         if gate_name in SINGLE_QUBIT_GATES:
             if target < 0 or target >= self.num_qubits:

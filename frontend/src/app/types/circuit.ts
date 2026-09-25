@@ -12,6 +12,7 @@ export interface GateOperation {
   gate: string;
   target: number;
   control?: number | null;
+  control2?: number | null;
   id: string; // unique ID for React key
   step: number; // time step in circuit
 }

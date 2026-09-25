@@ -1,82 +1,95 @@
-"use client";
+﻿"use client";
+import { useState } from "react";
+import { GATES } from "../lib/gateData";
+import Icon from "./Icon";
 
-import React from "react";
-
-const SINGLE_QUBIT_GATES = [
-  { name: "H", label: "H", color: "#6366f1", description: "Hadamard" },
-  { name: "X", label: "X", color: "#ef4444", description: "Pauli-X" },
-  { name: "Y", label: "Y", color: "#f97316", description: "Pauli-Y" },
-  { name: "Z", label: "Z", color: "#3b82f6", description: "Pauli-Z" },
-  { name: "S", label: "S", color: "#8b5cf6", description: "S Phase" },
-  { name: "T", label: "T", color: "#a855f7", description: "T Phase" },
-];
-
-const MULTI_QUBIT_GATES = [
-  { name: "CNOT", label: "CX", color: "#10b981", description: "Controlled-NOT" },
-  { name: "CZ", label: "CZ", color: "#14b8a6", description: "Controlled-Z" },
-  { name: "SWAP", label: "SW", color: "#f59e0b", description: "SWAP" },
-];
-
-interface GateToolbarProps {
-  onSelectGate: (gateName: string) => void;
+export default function GateToolbar({
+  onSelectGate,
+  selectedGate,
+}: {
+  onSelectGate: (gate: string) => void;
   selectedGate: string | null;
-}
-
-export default function GateToolbar({ onSelectGate, selectedGate }: GateToolbarProps) {
+}) {
+  const [hovered, setHovered] = useState<string | null>(null);
+  const current = GATES.find((g) => g.name === (hovered ?? selectedGate));
   return (
-    <div className="gate-toolbar">
-      <div className="gate-group">
-        <h3 className="gate-group-title">Single Qubit</h3>
-        <div className="gate-buttons">
-          {SINGLE_QUBIT_GATES.map((gate) => (
-            <button
-              key={gate.name}
-              className={`gate-btn ${selectedGate === gate.name ? "gate-btn-active" : ""}`}
-              style={{
-                "--gate-color": gate.color,
-                "--gate-color-dim": gate.color + "33",
-              } as React.CSSProperties}
-              onClick={() => onSelectGate(gate.name)}
-              title={gate.description}
-            >
-              {gate.label}
-            </button>
-          ))}
+    <aside className="gate-toolbar" aria-label="Gate library">
+      <div className="palette-heading">
+        <h2>Gates</h2>
+        <span className="mono">{String(GATES.length).padStart(2, "0")}</span>
+      </div>
+      <p className="palette-caption">Select or drag onto a wire</p>
+      {[1, 2, 3].map((count) => (
+        <div className="gate-group" key={count}>
+          <h3 className="eyebrow">
+            {count === 1
+              ? "Single qubit"
+              : count === 2
+                ? "Two qubit"
+                : "Three qubit"}
+          </h3>
+          <div className="gate-buttons">
+            {GATES.filter((g) => g.qubits === count).map((gate) => (
+              <button
+                type="button"
+                key={gate.name}
+                draggable
+                className={`gate-btn family-${gate.family} ${selectedGate === gate.name ? "gate-btn-active" : ""}`}
+                onClick={() => onSelectGate(gate.name)}
+                onMouseEnter={() => setHovered(gate.name)}
+                onMouseLeave={() => setHovered(null)}
+                onFocus={() => setHovered(gate.name)}
+                onBlur={() => setHovered(null)}
+                onDragStart={(event) => {
+                  event.dataTransfer.setData(
+                    "application/quantum-gate",
+                    gate.name,
+                  );
+                  event.dataTransfer.effectAllowed = "copy";
+                }}
+                aria-label={`${gate.title}. ${gate.description}`}
+                aria-pressed={selectedGate === gate.name}
+                title={`${gate.title}${gate.shortcut ? ` · ${gate.shortcut}` : ""}`}
+              >
+                <span className="gate-glyph">{gate.label}</span>
+                <span className="gate-name">
+                  {gate.name === "CNOT" ? "CNOT" : gate.title.split(" ").at(-1)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div className="gate-explainer" aria-live="polite">
+        <Icon name="info" size={15} />
+        <div>
+          <strong>{current?.title ?? "A gate is a transformation"}</strong>
+          <p>
+            {current?.description ??
+              "Hover over a gate to explore what it does. Select one to start building."}
+          </p>
         </div>
       </div>
-
-      <div className="gate-divider" />
-
-      <div className="gate-group">
-        <h3 className="gate-group-title">Multi Qubit</h3>
-        <div className="gate-buttons">
-          {MULTI_QUBIT_GATES.map((gate) => (
-            <button
-              key={gate.name}
-              className={`gate-btn ${selectedGate === gate.name ? "gate-btn-active" : ""}`}
-              style={{
-                "--gate-color": gate.color,
-                "--gate-color-dim": gate.color + "33",
-              } as React.CSSProperties}
-              onClick={() => onSelectGate(gate.name)}
-              title={gate.description}
-            >
-              {gate.label}
-            </button>
-          ))}
-        </div>
+      <div className="palette-foot">
+        <span className="small-dot" />
+        Unitary operations
       </div>
-    </div>
+    </aside>
   );
 }
-
-/** Get the colour for a gate by name */
-export function getGateColor(gateName: string): string {
-  const all = [...SINGLE_QUBIT_GATES, ...MULTI_QUBIT_GATES];
-  return all.find((g) => g.name === gateName)?.color ?? "#666";
+export function isMultiQubitGate(name: string) {
+  return GATES.some((g) => g.name === name && g.qubits > 1);
 }
-
-/** Check if a gate is multi-qubit */
-export function isMultiQubitGate(gateName: string): boolean {
-  return MULTI_QUBIT_GATES.some((g) => g.name === gateName);
+export function getGateLabel(name: string) {
+  return GATES.find((g) => g.name === name)?.label ?? name;
+}
+export type NodeKind = "box" | "control" | "target" | "swap";
+export function getNodeKind(
+  name: string,
+  role: "control" | "target",
+): NodeKind {
+  if (name === "SWAP") return "swap";
+  if (name === "CZ") return "control";
+  if (name === "CNOT" || name === "CCNOT") return role;
+  return "box";
 }

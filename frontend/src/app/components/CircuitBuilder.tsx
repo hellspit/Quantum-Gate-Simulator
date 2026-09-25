@@ -1,182 +1,276 @@
-"use client";
-
-import React from "react";
+﻿"use client";
+import { useEffect, useRef, useState } from "react";
 import type { GateOperation } from "../types/circuit";
-import { getGateColor, isMultiQubitGate } from "./GateToolbar";
+import type { PendingGate } from "./Workbench";
+import { getNodeKind, getGateLabel, isMultiQubitGate } from "./GateToolbar";
+import { gateFamily } from "../lib/gateData";
+import Icon from "./Icon";
+import QubitLabel from "./QubitLabel";
+const CELL = 68;
 
-interface CircuitBuilderProps {
+interface Props {
   numQubits: number;
+  qubitLabels?: string[];
+  onLabelChange: (qubit: number, label: string) => void;
   initialStates: number[];
   operations: GateOperation[];
   selectedGate: string | null;
-  onAddQubit: () => void;
-  onRemoveQubit: () => void;
-  onPlaceGate: (target: number, step: number) => void;
+  pendingControl: PendingGate | null;
+  onPlaceGate: (qubit: number, step: number, droppedGate?: string) => void;
   onRemoveGate: (id: string) => void;
-  onReset: () => void;
   onToggleInitialState: (qubit: number) => void;
-  pendingControl: { gate: string; control: number; step: number } | null;
+  onCancelSelection: () => void;
 }
-
 export default function CircuitBuilder({
   numQubits,
+  qubitLabels,
+  onLabelChange,
   initialStates,
   operations,
   selectedGate,
-  onAddQubit,
-  onRemoveQubit,
+  pendingControl,
   onPlaceGate,
   onRemoveGate,
-  onReset,
   onToggleInitialState,
-  pendingControl,
-}: CircuitBuilderProps) {
-  // Calculate number of time steps to show
-  const maxStep = operations.reduce((max, op) => Math.max(max, op.step), -1);
-  const numSteps = Math.max(maxStep + 2, 8); // at least 8 columns
-
-  // Build a grid lookup: grid[qubit][step] = operation
+  onCancelSelection,
+}: Props) {
+  const [dragCell, setDragCell] = useState<string | null>(null);
+  const [visibleSteps, setVisibleSteps] = useState(8);
+  const gridViewport = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = gridViewport.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) =>
+      setVisibleSteps(
+        Math.max(8, Math.floor((entry.contentRect.width - 132) / CELL)),
+      ),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  const numSteps = Math.max(
+    visibleSteps,
+    operations.reduce((max, op) => Math.max(max, op.step + 2), 0),
+  );
   const grid: Record<string, GateOperation> = {};
-  for (const op of operations) {
+  operations.forEach((op) => {
     grid[`${op.target}-${op.step}`] = op;
-    if (op.control !== null && op.control !== undefined) {
-      grid[`${op.control}-${op.step}`] = op;
-    }
-  }
-
+    if (op.control != null) grid[`${op.control}-${op.step}`] = op;
+    if (op.control2 != null) grid[`${op.control2}-${op.step}`] = op;
+  });
+  const instruction = pendingControl
+    ? `Choose the ${pendingControl.gate === "SWAP" ? "second" : pendingControl.gate === "CCNOT" && pendingControl.control2 == null ? "second control" : "target"} qubit in column ${pendingControl.step + 1}.`
+    : selectedGate
+      ? isMultiQubitGate(selectedGate)
+        ? `Choose the ${selectedGate === "SWAP" ? "first" : "control"} qubit for ${getGateLabel(selectedGate)}.`
+        : `Click an empty position to place ${selectedGate}.`
+      : "Select a gate, then click a wire. Click a placed gate to remove it.";
   return (
     <div className="circuit-builder">
-      {/* Circuit header controls */}
-      <div className="circuit-controls">
-        <div className="qubit-controls">
-          <button onClick={onRemoveQubit} disabled={numQubits <= 1} className="circuit-ctrl-btn" title="Remove qubit">
-            −
-          </button>
-          <span className="qubit-count">{numQubits} Qubit{numQubits > 1 ? "s" : ""}</span>
-          <button onClick={onAddQubit} disabled={numQubits >= 10} className="circuit-ctrl-btn" title="Add qubit">
-            +
-          </button>
-        </div>
-        <button onClick={onReset} className="circuit-reset-btn" title="Reset circuit">
-          Reset
-        </button>
-      </div>
-
-      {/* Instruction hint */}
-      {selectedGate && (
-        <div className="circuit-hint">
-          {pendingControl ? (
-            <span>
-              Click a cell to set <strong>target</strong> for {pendingControl.gate}
-            </span>
-          ) : isMultiQubitGate(selectedGate) ? (
-            <span>
-              Click a cell to set <strong>control</strong> qubit for {selectedGate}
-            </span>
+      <div
+        className={`circuit-hint ${selectedGate ? "is-selecting" : ""}`}
+        aria-live="polite"
+      >
+        <span className="hint-marker">
+          {selectedGate ? (
+            <span className="small-dot" />
           ) : (
-            <span>
-              Click a cell to place <strong>{selectedGate}</strong> gate
-            </span>
+            <Icon name="info" size={14} />
           )}
-        </div>
-      )}
-
-      {/* Circuit grid */}
-      <div className="circuit-grid-wrapper">
-        <div className="circuit-grid">
-          {/* Column headers (time steps) */}
+        </span>
+        <span>{instruction}</span>
+        {selectedGate && (
+          <button className="hint-cancel" onClick={onCancelSelection}>
+            Cancel <kbd>Esc</kbd>
+          </button>
+        )}
+      </div>
+      <div className="circuit-grid-wrapper" ref={gridViewport}>
+        <div
+          className="circuit-grid"
+          style={{ minWidth: 112 + numSteps * CELL + 54 }}
+        >
           <div className="circuit-row circuit-header-row">
-            <div className="circuit-label" />
-            {Array.from({ length: numSteps }, (_, step) => (
-              <div key={step} className="circuit-header-cell">
-                {step}
-              </div>
-            ))}
+            <div className="circuit-label">
+              <span className="eyebrow">Register</span>
+            </div>
+            <div className="circuit-track">
+              {Array.from({ length: numSteps }, (_, step) => (
+                <div className="circuit-header-cell" key={step}>
+                  {String(step + 1).padStart(2, "0")}
+                </div>
+              ))}
+            </div>
           </div>
-
-          {/* Qubit rows */}
           {Array.from({ length: numQubits }, (_, qubit) => (
-            <div key={qubit} className="circuit-row">
-              <div className="circuit-label">
-                <span className="qubit-label">q{qubit}</span>
-                <button 
-                  className="ket-label hover-toggle" 
+            <div className="circuit-row" key={qubit}>
+              <div className="circuit-label qubit-register">
+                <span className="qubit-label">
+                  q<span>{qubit}</span>
+                </span>
+                <button
+                  className="ket-label"
                   onClick={() => onToggleInitialState(qubit)}
-                  title="Click to toggle initial state"
+                  aria-label={`Qubit ${qubit} initial state ${initialStates[qubit]}. Click to toggle.`}
                 >
-                  |{initialStates[qubit] || 0}⟩
+                  |{initialStates[qubit]}⟩
                 </button>
+                <QubitLabel
+                  qubit={qubit}
+                  label={qubitLabels?.[qubit] ?? ""}
+                  onChange={(label) => onLabelChange(qubit, label)}
+                />
               </div>
-
-              {Array.from({ length: numSteps }, (_, step) => {
-                const key = `${qubit}-${step}`;
-                const op = grid[key];
-                const isTarget = op && op.target === qubit;
-                const isControl = op && op.control === qubit;
-                const isPendingControlCell =
-                  pendingControl && pendingControl.control === qubit && pendingControl.step === step;
-
-                return (
-                  <div
-                    key={step}
-                    className={`circuit-cell ${selectedGate ? "circuit-cell-clickable" : ""} ${isPendingControlCell ? "circuit-cell-pending" : ""}`}
-                    onClick={() => selectedGate && onPlaceGate(qubit, step)}
-                  >
-                    {/* Qubit wire line */}
-                    <div className="wire-line" />
-
-                    {/* Gate or control dot */}
-                    {isTarget && (
-                      <div
-                        className="gate-chip"
-                        style={{ backgroundColor: getGateColor(op.gate) }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveGate(op.id);
-                        }}
-                        title={`${op.gate} — click to remove`}
-                      >
-                        {op.gate === "CNOT" ? "X" : op.gate === "SWAP" ? "×" : op.gate}
-                      </div>
-                    )}
-                    {isControl && !isTarget && (
-                      <div
-                        className="control-dot"
-                        style={{ backgroundColor: getGateColor(op.gate) }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRemoveGate(op.id);
-                        }}
-                        title={`${op.gate} control — click to remove`}
-                      />
-                    )}
-
-                    {/* Vertical connector between control and target */}
-                    {op && op.control !== null && op.control !== undefined && (
-                      (() => {
-                        const minQ = Math.min(op.control, op.target);
-                        const maxQ = Math.max(op.control, op.target);
-                        if (qubit === minQ) {
-                          return (
-                            <div
-                              className="connector-line"
-                              style={{
-                                backgroundColor: getGateColor(op.gate),
-                                height: `${(maxQ - minQ) * 56}px`,
-                                top: "50%",
-                              }}
-                            />
-                          );
+              <div className="circuit-track">
+                <div className="wire-line" />
+                {Array.from({ length: numSteps }, (_, step) => {
+                  const key = `${qubit}-${step}`,
+                    op = grid[key];
+                  const pending =
+                    pendingControl?.step === step &&
+                    (pendingControl.control === qubit ||
+                      pendingControl.control2 === qubit);
+                  const available =
+                    !op &&
+                    (!pendingControl ||
+                      (step === pendingControl.step &&
+                        qubit !== pendingControl.control &&
+                        qubit !== pendingControl.control2));
+                  const kind = op
+                    ? getNodeKind(
+                        op.gate,
+                        op.target === qubit ? "target" : "control",
+                      )
+                    : null;
+                  return (
+                    <div
+                      key={step}
+                      className={`circuit-cell ${pendingControl?.step === step ? "in-pending-column" : ""} ${dragCell === key ? "drag-over" : ""}`}
+                      onDragOver={(event) => {
+                        if (
+                          !op &&
+                          event.dataTransfer.types.includes(
+                            "application/quantum-gate",
+                          )
+                        ) {
+                          event.preventDefault();
+                          event.dataTransfer.dropEffect = "copy";
+                          setDragCell(key);
                         }
-                        return null;
-                      })()
-                    )}
-                  </div>
-                );
-              })}
+                      }}
+                      onDragLeave={() => setDragCell(null)}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        setDragCell(null);
+                        if (!op)
+                          onPlaceGate(
+                            qubit,
+                            step,
+                            event.dataTransfer.getData(
+                              "application/quantum-gate",
+                            ),
+                          );
+                      }}
+                    >
+                      {op ? (
+                        <>
+                          <button
+                            className={`placed-gate family-${gateFamily(op.gate)} node-${kind}`}
+                            onClick={() => onRemoveGate(op.id)}
+                            aria-label={`Remove ${op.gate} gate on qubit ${qubit}, step ${step + 1}`}
+                            title={`Remove ${op.gate}`}
+                          >
+                            {kind === "box" ? (
+                              op.gate
+                            ) : kind === "swap" ? (
+                              "×"
+                            ) : kind === "target" ? (
+                              "+"
+                            ) : (
+                              <span />
+                            )}
+                            <span className="gate-remove-badge">×</span>
+                          </button>
+                          {op.control != null &&
+                            qubit ===
+                              Math.min(
+                                op.control,
+                                op.control2 ?? op.control,
+                                op.target,
+                              ) && (
+                              <div
+                                className={`connector-line family-${gateFamily(op.gate)}`}
+                                style={{
+                                  height:
+                                    (Math.max(
+                                      op.control,
+                                      op.control2 ?? op.control,
+                                      op.target,
+                                    ) -
+                                      Math.min(
+                                        op.control,
+                                        op.control2 ?? op.control,
+                                        op.target,
+                                      )) *
+                                    CELL,
+                                }}
+                              />
+                            )}
+                        </>
+                      ) : pending ? (
+                        <span
+                          className="node-pending"
+                          aria-label="Control selected"
+                        />
+                      ) : (
+                        <button
+                          className={`placement-slot ${selectedGate && available ? "slot-active" : ""}`}
+                          disabled={!selectedGate || !available}
+                          onClick={() => onPlaceGate(qubit, step)}
+                          aria-label={`Place ${selectedGate ?? "gate"} on qubit ${qubit}, step ${step + 1}`}
+                        >
+                          <span>
+                            {selectedGate ? getGateLabel(selectedGate) : "+"}
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+                <span className="wire-end" aria-hidden="true">
+                  ›
+                </span>
+              </div>
             </div>
           ))}
+          {!operations.length && !selectedGate && (
+            <div className="empty-circuit-note">
+              An open canvas for your next experiment.
+              <span>Choose a gate from the palette to begin.</span>
+            </div>
+          )}
         </div>
+      </div>
+      <div className="circuit-legend">
+        <span>
+          <i className="legend-superposition" />
+          Superposition
+        </span>
+        <span>
+          <i className="legend-pauli" />
+          Pauli
+        </span>
+        <span>
+          <i className="legend-phase" />
+          Phase
+        </span>
+        <span>
+          <i className="legend-controlled" />
+          Controlled / swap
+        </span>
+        <span className="initial-hint">
+          Click a label to rename · Click |0⟩ to change an input
+        </span>
       </div>
     </div>
   );

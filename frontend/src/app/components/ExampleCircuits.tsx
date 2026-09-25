@@ -1,35 +1,29 @@
-"use client";
-
-import React from "react";
+﻿"use client";
 import type { GateOperation } from "../types/circuit";
-
-interface ExampleCircuit {
-  name: string;
-  description: string;
-  numQubits: number;
-  operations: Omit<GateOperation, "id">[];
-}
-
-const EXAMPLES: ExampleCircuit[] = [
-  {
-    name: "Superposition",
-    description: "Single qubit in equal superposition using Hadamard",
-    numQubits: 1,
-    operations: [{ gate: "H", target: 0, control: null, step: 0 }],
-  },
+import Icon from "./Icon";
+const examples = [
   {
     name: "Bell State",
-    description: "Entangled pair: |00⟩ + |11⟩",
-    numQubits: 2,
+    label: "Bell pair",
+    qubits: 2,
+    description: "Entangle two qubits",
     operations: [
       { gate: "H", target: 0, control: null, step: 0 },
       { gate: "CNOT", target: 1, control: 0, step: 1 },
     ],
   },
   {
+    name: "Superposition",
+    label: "Superposition",
+    qubits: 1,
+    description: "Explore equal probabilities",
+    operations: [{ gate: "H", target: 0, control: null, step: 0 }],
+  },
+  {
     name: "GHZ State",
-    description: "3-qubit entanglement: |000⟩ + |111⟩",
-    numQubits: 3,
+    label: "GHZ state",
+    qubits: 3,
+    description: "Entangle three qubits",
     operations: [
       { gate: "H", target: 0, control: null, step: 0 },
       { gate: "CNOT", target: 1, control: 0, step: 1 },
@@ -37,40 +31,41 @@ const EXAMPLES: ExampleCircuit[] = [
     ],
   },
   {
-    name: "Bit Flip",
-    description: "Apply X gate to flip |0⟩ → |1⟩",
-    numQubits: 1,
-    operations: [{ gate: "X", target: 0, control: null, step: 0 }],
-  },
-  {
     name: "SWAP Qubits",
-    description: "Swap states of two qubits",
-    numQubits: 2,
+    label: "State swap",
+    qubits: 2,
+    description: "Exchange two qubit states",
     operations: [
       { gate: "X", target: 0, control: null, step: 0 },
       { gate: "SWAP", target: 1, control: 0, step: 1 },
     ],
   },
 ];
-
-interface ExampleCircuitsProps {
-  onLoadExample: (numQubits: number, ops: Omit<GateOperation, "id">[]) => void;
-}
-
-export default function ExampleCircuits({ onLoadExample }: ExampleCircuitsProps) {
+export default function ExampleCircuits({
+  onLoadExample,
+  activeName,
+}: {
+  onLoadExample: (
+    qubits: number,
+    ops: Omit<GateOperation, "id">[],
+    name: string,
+  ) => void;
+  activeName: string;
+}) {
   return (
     <div className="example-circuits">
-      <h3 className="examples-title">Example Circuits</h3>
-      <div className="examples-grid">
-        {EXAMPLES.map((ex) => (
+      <span className="eyebrow">Start with an idea</span>
+      <div className="example-options">
+        {examples.map((ex) => (
           <button
             key={ex.name}
-            className="example-btn"
-            onClick={() => onLoadExample(ex.numQubits, ex.operations)}
+            className={`example-btn ${activeName === ex.name ? "example-active" : ""}`}
+            onClick={() => onLoadExample(ex.qubits, ex.operations, ex.name)}
             title={ex.description}
           >
-            <span className="example-name">{ex.name}</span>
-            <span className="example-desc">{ex.description}</span>
+            <span className="example-qubits">{ex.qubits}q</span>
+            {ex.label}
+            <Icon name={activeName === ex.name ? "check" : "arrow"} size={14} />
           </button>
         ))}
       </div>
