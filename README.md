@@ -2,7 +2,7 @@
 
 An interactive quantum circuit simulator (**quantum/lab**). Place gates on wires, run an exact state-vector simulation, and see the result as probabilities, sampled measurements, complex amplitudes and live 3D Bloch spheres.
 
-![Quantum Gate Simulator workspace](docs/workspace.png)
+![Quantum Gate Simulator workspace](screenshots/workspace.png)
 
 ## Features
 
@@ -21,11 +21,11 @@ An interactive quantum circuit simulator (**quantum/lab**). Place gates on wires
 
 | Results | Bloch explorer |
 | :---: | :---: |
-| ![Probability results for a Bell state](docs/results.png) | ![Bloch sphere explorer](docs/bloch-explorer.png) |
+| ![Probability results for a Bell state](screenshots/results.png) | ![Bloch sphere explorer](screenshots/bloch-explorer.png) |
 
 ## Circuit Library
 
-![Circuit library](docs/circuit-library.png)
+![Circuit library](screenshots/circuit-library.png)
 
 | Category | Circuits |
 | :--- | :--- |
